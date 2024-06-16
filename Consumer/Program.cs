@@ -2,49 +2,42 @@
 using RabbitMQ.Client.Events;
 using System.Text;
 
-//Servidor do Rabbitmq
-var servidor = new ConnectionFactory()
+//RabbitMQServer
+var server = new ConnectionFactory()
 {
     HostName = "localhost",
-    Port = 0,
-    UserName = "",
-    Password = ""
+    Port = 5672,
+    UserName = "usuario",
+    Password = "Senha@123"
 };
 
-//Conexão com o servidor
-var conexao = servidor.CreateConnection();
-
-/* 
- * var conexao = servidor.CreateConnection();
- * IModel channel = conexao.CreateModel();
- * channel.Close();
- * conexao.Close(); 
- */
-//Canal usamos o using para não ter a necessidade de chamar o metodo close
-using (var canal = conexao.CreateModel())
+//Connect to server
+var conn = server.CreateConnection();
+using (var channel = conn.CreateModel())
 {
-    //escutar fila
-    canal.QueueDeclare(
-        queue: "",
-        durable: false, 
-        exclusive: false, 
-        autoDelete: false, 
+    //selecting or creating a queue
+    channel.QueueDeclare(
+        queue: "queue_hello_world",
+        durable: false,
+        exclusive: false,
+        autoDelete: false,
         arguments: null);
 
-    //Consumidor
-    var consumidor = new EventingBasicConsumer(canal);
-    //evento que o consumidor está escutando 
-    consumidor.Received += (model, ea) =>
+    //Consumer
+    var consumer = new EventingBasicConsumer(channel);
+
+    //event for consumer
+    consumer.Received += (model, ea) =>
     {
-        //vamos receber o corpo do rabbit
-        var corpo = ea.Body.ToArray();
-        //pegar a mensagem que está em bytes e converter
-        var mensagem = Encoding.UTF8.GetString(corpo);
-        //mostrando a mensagem
-        Console.WriteLine(" [x] Recebido {0}", mensagem);
+        //receiving rabbit mq body
+        var bodyMessage = ea.Body.ToArray();
+        //gotr a message
+        var message = Encoding.UTF8.GetString(bodyMessage);
+        //show message
+        Console.WriteLine(" [x] Received {0}", message);
     };
-    canal.BasicConsume(queue:"",autoAck:true,consumer:consumidor);
+    channel.BasicConsume(queue: "queue_hello_world", autoAck: true, consumer: consumer);
 
 }
-Console.WriteLine("Pressione [enter] para sair.");
+Console.WriteLine("Press [enter] to exit.");
 Console.ReadKey();

@@ -1,39 +1,42 @@
 ﻿using RabbitMQ.Client;
 using System.Text;
 
-//Servidor do Rabbitmq
-var servidor = new ConnectionFactory()
+//RabbitMQ Server
+var server = new ConnectionFactory()
 {
     HostName = "localhost",
-    Port = 0,
-    UserName = "",
-    Password = ""
+    Port = 5672,
+    UserName = "usuario",
+    Password = "Senha@123"
 };
 
-//Conexão com o servidor
-var conexao = servidor.CreateConnection();
-//Canal
-using (var canal = conexao.CreateModel())
-{
-    //Criar fila ou escutar fila
+//Server conn
+var conn = server.CreateConnection();
 
-    canal.QueueDeclare(
-        queue: "",
+
+//Channel
+using (var chanel = conn.CreateModel())
+{
+    //Create Queue
+
+    chanel.QueueDeclare(
+        queue: "queue_hello_world",
         durable: false,
         exclusive: false,
         autoDelete: false,
         arguments: null);
 
-    //Mensagem
-    string mensagem = "Hello World";
-    //Converter mensagem para bytes
-    var corpoMensagem = Encoding.UTF8.GetBytes(mensagem);
-    canal.BasicPublish(
+    //Message
+    string message = "Hello World";
+    //Convert to bytes[]
+    var bodyMessage = Encoding.UTF8.GetBytes(message);
+    chanel.BasicPublish(
         exchange: "",
-        routingKey: "",
+        routingKey: "queue_hello_world",
         basicProperties: null,
-        body: corpoMensagem);
-    Console.WriteLine(" [x] Enviou {0}", mensagem);
+        body: bodyMessage);
+    Console.WriteLine(" [x] Send {0}", message);
 }
-Console.WriteLine("Pressione [enter] para sair.");
+Console.WriteLine("Press [enter] to exit.");
 Console.ReadKey();
+
